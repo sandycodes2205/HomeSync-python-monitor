@@ -13,7 +13,7 @@ cred_dict = json.loads(firebase_key_json)
 cred = credentials.Certificate(cred_dict)
 
 firebase_admin.initialize_app(cred, {
-    'databaseURL': "https://console.firebase.google.com/u/0/project/homesync-2205/database/homesync-2205-default-rtdb/data/~2F"
+    'databaseURL': "https://homesync-2205-default-rtdb.asia-southeast1.firebasedatabase.app/"
 })
 
 ref = db.reference("devices")
