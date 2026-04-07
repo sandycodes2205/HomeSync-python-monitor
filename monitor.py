@@ -43,14 +43,15 @@ print("Python Firebase Monitor Started")
 while True:
 
     devices = devices_ref.get()
-    if not total_usage:
-        total_usage = {}
-
-    if not power_usage:
-        power_usage = {}
+    
     total_usage = stats_ref.child("total_usage").get() or {}
     power_usage = stats_ref.child("power_consumption").get() or {}
+    if not total_usage:
+            total_usage = {}
 
+    if not power_usage:
+            power_usage = {}
+            
     current_time = datetime.now(IST)
     current_time_str = current_time.strftime("%H:%M:%S")
 
