@@ -21,6 +21,7 @@ def home():
 # ---------------------------
 # Firebase Setup
 # ---------------------------
+
 IST = pytz.timezone("Asia/Kolkata")
 
 firebase_key_json = os.environ.get("FIREBASE_KEY")
@@ -76,12 +77,18 @@ def monitor_loop():
             if state and not previous_states[device]:
 
                 device_start_times[device] = current_time
+                active_log_id = data.get("active_log_id")
 
-                logs_ref.push({
-                    "device": device,
-                    "state": True,
-                    "timestamp": current_time_str
-                })
+                if not active_log_id:
+                    logs_ref.push({
+                        "device": device,
+                        "state": True,
+                        "timestamp": current_time_str
+                    })
+                else: 
+                     devices_ref.child(device).update({
+                        "active_log_id": None
+                    })
 
             # ---------------------------
             # Detect OFF
@@ -126,12 +133,25 @@ def monitor_loop():
                         device: power_usage[device]
                     })
 
-                    logs_ref.push({
-                        "device": device,
-                        "state": False,
-                        "timestamp": current_time_str,
-                        "duration": duration
-                    })
+                    active_log_id = data.get("active_log_id")
+
+                    if active_log_id:
+                        # Enhance existing log with duration
+                        logs_ref.child(active_log_id).update({
+                            "duration": duration
+                        })
+                        # Clear handshake
+                        devices_ref.child(device).update({
+                            "active_log_id": None
+                        })
+                    else:
+                        # Standard log (e.g. from automation)
+                        logs_ref.push({
+                            "device": device,
+                            "state": False,
+                            "timestamp": current_time_str,
+                            "duration": duration
+                        })
 
             previous_states[device] = state
 
@@ -171,5 +191,6 @@ def monitor_loop():
         time.sleep(5)
 
 threading.Thread(target=monitor_loop).start()
+
 port = int(os.environ.get("PORT", 10000))
 app.run(host="0.0.0.0", port=port)
