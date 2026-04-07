@@ -40,6 +40,12 @@ device_start_times = {}
 
 print("Python Firebase Monitor Started")
 
+if not total_usage:
+    total_usage = {}
+
+if not power_usage:
+    power_usage = {}
+
 while True:
 
     devices = devices_ref.get()
@@ -61,13 +67,13 @@ while True:
         # Detect ON
         # ---------------------------
 
-        if state == "ON" and previous_states[device] == "OFF":
+        if state and not previous_states[device]:
 
             device_start_times[device] = current_time
 
             logs_ref.push({
                 "device": device,
-                "state": "ON",
+                "state": True,
                 "timestamp": current_time_str
             })
 
@@ -75,14 +81,14 @@ while True:
         # Detect OFF
         # ---------------------------
 
-        if state == "OFF" and previous_states[device] == "ON":
+        if not state and previous_states[device]:
 
             if device in device_start_times:
 
                 duration = (
                     current_time
                     - device_start_times[device]
-                ).seconds
+                ).total_seconds()
 
                 # Update usage_duration
                 devices_ref.child(device).update({
@@ -116,7 +122,7 @@ while True:
 
                 logs_ref.push({
                     "device": device,
-                    "state": "OFF",
+                    "state": False,
                     "timestamp": current_time_str,
                     "duration": duration
                 })
@@ -137,14 +143,14 @@ while True:
         if auto_on == current_time_str:
 
             devices_ref.child(device).update({
-                "state": "ON",
+                "state": True,
                 "last_updated": current_time_str
             })
 
         if auto_off == current_time_str:
 
             devices_ref.child(device).update({
-                "state": "OFF",
+                "state": False,
                 "last_updated": current_time_str
             })
 
